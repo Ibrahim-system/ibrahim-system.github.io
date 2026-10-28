@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صور المنتجات — الأمراء</title>
+<link rel="icon" href="icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc;
+    --card:#fff; --brand:#4f46e5; --accent:#e8490f; --ok:#16a34a; --danger:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:Alexandria,system-ui,sans-serif;font-size:14px;line-height:1.7}
+  .wrap{max-width:1080px;margin:0 auto;padding:20px 16px 100px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;
+       padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:22px;flex-wrap:wrap}
+  h1{font-size:20px;margin:0;font-weight:700}
+  h2{font-size:16px;margin:0 0 4px;font-weight:700}
+  .sub{color:var(--muted);font-size:12.5px;margin:0}
+  a.back{color:var(--brand);font-size:13px;text-decoration:none}
+  a.back:hover{text-decoration:underline}
+
+  .search-row{display:flex;gap:8px;margin-bottom:16px}
+  .search-row input{flex:1;border:1px solid var(--line);border-radius:8px;padding:11px 14px;
+       font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+  .search-row input:focus{outline:2px solid var(--brand);outline-offset:1px;border-color:transparent}
+
+  /* Products needing photos surface first — that queue is the whole point
+     of this page, so it should never require scrolling to find. */
+  .queue-banner{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;
+       padding:12px 15px;margin-bottom:16px;font-size:13px;color:#9a3412}
+  .queue-banner strong{font-weight:700}
+
+  /* شريط النشر: الحالة لازم تبان من غير ما حد يدوّر عليها، والزرار
+     جنبها مباشرة عشان الخطوة الناقصة تبقى واضحة. */
+  .pubbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+       background:#fff7ed;border:1px solid #fed7aa;border-radius:11px;padding:12px 15px;margin:0 0 16px}
+  .pubbar.on{background:#f0fdf4;border-color:#bbf7d0}
+  .pubtxt{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .pubtxt strong{font-size:14px;color:#9a3412}
+  .pubbar.on .pubtxt strong{color:#166534}
+  .pubtxt span{font-size:12.5px;color:var(--muted)}
+  .pubbtn{border:0;border-radius:9px;padding:11px 18px;font:inherit;font-weight:700;font-size:13.5px;
+       background:var(--ok);color:#fff;cursor:pointer;white-space:nowrap;min-height:44px}
+  .pubbtn:hover:not(:disabled){filter:brightness(.94)}
+  .pubbtn:disabled{opacity:.5;cursor:not-allowed}
+  .pubbtn.off{background:#fff;color:var(--muted);border:1px solid var(--line)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+       cursor:pointer;transition:border-color .15s,transform .15s}
+  .pcard:hover{border-color:var(--brand)}
+  .pcard:active{transform:scale(.98)}
+  .pcard .thumb{aspect-ratio:1/1;background:var(--bg);display:flex;align-items:center;
+       justify-content:center;position:relative;overflow:hidden}
+  .pcard .thumb img{width:100%;height:100%;object-fit:cover}
+  .pcard .thumb .ph-count{position:absolute;bottom:6px;inset-inline-end:6px;background:rgba(15,23,42,.8);
+       color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px}
+  .pcard .thumb .needs{position:absolute;top:6px;inset-inline-start:6px;background:var(--accent);
+       color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px}
+  .pcard .no-img{color:var(--muted);font-size:11px;text-align:center;padding:0 10px}
+  .pcard .body{padding:9px 10px}
+  .pcard .name{font-size:12.5px;font-weight:600;margin:0 0 3px;
+       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pcard .meta{font-size:11px;color:var(--muted)}
+
+  /* شريط تقدّم صغير على الكارت: بيقول فورًا فضل كام لون */
+  .pcard .bar{height:4px;background:#f1f5f9;border-radius:99px;overflow:hidden;margin-top:7px}
+  .pcard .bar span{display:block;height:100%;background:var(--ok);border-radius:99px}
+  .pcard .done{border-color:#bbf7d0}
+  .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .fchip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 14px;
+       font:inherit;font-size:12.5px;cursor:pointer;color:var(--muted);white-space:nowrap}
+  .fchip.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+  .pill-hidden{position:absolute;top:6px;inset-inline-end:6px;background:#475569;color:#fff;
+       font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:99px}
+
+  /* editor */
+  .veil{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:80;display:none}
+  .veil.on{display:block}
+  .sheet{position:fixed;inset-inline:0;bottom:0;z-index:81;background:#fff;
+       border-radius:16px 16px 0 0;max-height:94vh;overflow-y:auto;
+       transform:translateY(100%);transition:transform .25s ease;
+       box-shadow:0 -20px 50px -20px rgba(0,0,0,.4)}
+  .sheet.on{transform:translateY(0)}
+  .sheet-inner{padding:18px 16px calc(96px + env(safe-area-inset-bottom))}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+  .sheet-close{background:none;border:0;font-size:20px;color:var(--muted);padding:4px 8px;cursor:pointer}
+
+  /* اللون أولًا: كل لون سطر واضح فيه عدّاده — مش شيب صغير يتنسى */
+  .clist{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px}
+  .crow{display:flex;align-items:center;gap:11px;padding:11px 13px;cursor:pointer;
+       border-bottom:1px solid #f1f5f9;background:#fff}
+  .crow:last-child{border-bottom:0}
+  .crow.on{background:#eef2ff}
+  .crow .cname{flex:1;font-size:13.5px;font-weight:600}
+  .crow .ccount{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:99px;
+       background:#f1f5f9;color:var(--muted)}
+  .crow .ccount.has{background:#dcfce7;color:var(--ok)}
+  .crow .cthumb{width:34px;height:34px;border-radius:8px;object-fit:cover;
+       border:1px solid var(--line);flex:0 0 auto;background:var(--bg)}
+  .crow .cthumb.empty{display:flex;align-items:center;justify-content:center;
+       color:var(--muted);font-size:15px}
+
+  .shot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .shot{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;
+       border:1.5px solid var(--line);background:var(--bg);cursor:pointer}
+  .shot.cover{border-color:var(--ok);border-width:2.5px}
+  .shot img{width:100%;height:100%;object-fit:cover;display:block}
+  .shot .color-tag{position:absolute;bottom:0;inset-inline:0;background:rgba(15,23,42,.75);
+       color:#fff;font-size:10px;text-align:center;padding:3px 4px}
+  .shot .cov{position:absolute;top:4px;inset-inline-start:4px;background:var(--ok);color:#fff;
+       font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:99px}
+  .shot.uploading{display:flex;align-items:center;justify-content:center}
+  .shot .spin{width:20px;height:20px;border:2.5px solid var(--line);border-top-color:var(--brand);
+       border-radius:99px;animation:sp .7s linear infinite}
+  .add-shot{aspect-ratio:1/1;border-radius:10px;border:1.5px dashed var(--brand);
+       background:#eef2ff;display:flex;flex-direction:column;align-items:center;justify-content:center;
+       gap:4px;color:var(--brand);font-size:11px;font-weight:600;cursor:pointer;text-align:center;padding:6px}
+  .add-shot svg{width:24px;height:24px}
+  .add-shot:active{background:#e0e7ff}
+
+  /* منطقة الرفع: سحب وإفلات، أو اختيار من الجهاز، أو لصق من الكليببورد.
+     مفيش capture — الصور موجودة على الكمبيوتر، مش هتتصوّر دلوقتي. */
+  .drop{border:2px dashed var(--line);border-radius:14px;background:#fbfcfe;
+       padding:26px 18px;text-align:center;cursor:pointer;transition:.15s;margin-bottom:14px}
+  .drop:hover{border-color:var(--brand);background:#f5f7ff}
+  .drop.over{border-color:var(--brand);background:#eef2ff;transform:scale(1.01)}
+  .drop svg{width:34px;height:34px;color:var(--brand);margin-bottom:6px}
+  .drop .big{font-size:14px;font-weight:700;margin:0 0 3px}
+  .drop .small{font-size:11.5px;color:var(--muted);margin:0}
+
+  /* صينية المراجعة: الصور بتتراجع قبل الرفع، مش بتترفع وبعدين نصلّح */
+  .tray{border:1px solid var(--brand);border-radius:12px;padding:13px;margin-bottom:14px;
+       background:#f8faff}
+  .tray-head{display:flex;justify-content:space-between;align-items:center;gap:8px;
+       margin-bottom:10px;flex-wrap:wrap}
+  .tray-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:9px}
+  .tcard{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;position:relative}
+  .tcard img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .tcard select{width:100%;border:0;border-top:1px solid var(--line);border-radius:0;
+       padding:6px 7px;font-size:11.5px;background:#fff}
+  .tcard .x{position:absolute;top:4px;inset-inline-end:4px;width:21px;height:21px;border-radius:99px;
+       background:rgba(15,23,42,.75);color:#fff;border:0;font-size:12px;cursor:pointer;
+       display:flex;align-items:center;justify-content:center}
+  .tcard .sz{position:absolute;bottom:34px;inset-inline-start:4px;background:rgba(15,23,42,.72);
+       color:#fff;font-size:9.5px;padding:1px 6px;border-radius:99px}
+  .tcard .guess{position:absolute;top:4px;inset-inline-start:4px;background:var(--ok);
+       color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px}
+  .tcard.err{border-color:#fecaca}
+  .tcard .bad{position:absolute;inset:0;background:rgba(220,38,38,.82);color:#fff;
+       display:flex;align-items:center;justify-content:center;font-size:10.5px;padding:8px;text-align:center}
+  .tprog{height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:10px}
+  .tprog span{display:block;height:100%;background:var(--brand);border-radius:99px;transition:width .2s}
+
+  /* أكشنز صورة واحدة */
+  .tip{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:8px;
+       padding:10px 12px;font-size:12px;margin-bottom:14px;line-height:1.7}
+  .warnbox{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:8px;
+       padding:10px 12px;font-size:12.5px;margin-bottom:14px;line-height:1.7}
+
+
+  /* ── أساسيات كانت ناقصة: الأزرار والتوست وشيت الأكشن كانت بتطلع من غير
+     ستايل خالص (الكلاسات مستخدمة في الصفحة ومش متعرّفة هنا). */
+  .btn-primary{border:0;border-radius:10px;padding:12px 18px;font:inherit;font-weight:700;font-size:14px;
+       background:var(--brand);color:#fff;cursor:pointer;min-height:44px}
+  .btn-primary:hover:not(:disabled){filter:brightness(.95)}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+  .btn-ghost{border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:inherit;font-size:13px;
+       background:#fff;color:var(--ink);cursor:pointer}
+  .btn-ghost:hover{border-color:var(--brand)}
+  .btn-sm{padding:7px 12px;font-size:12.5px}
+  .center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 0}
+  .muted{color:var(--muted)}
+  .spin-big{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);
+       border-radius:99px;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:13px}
+  #toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+       z-index:120;display:none;max-width:calc(100% - 32px);background:var(--ink);color:#fff;
+       padding:11px 16px;border-radius:11px;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+  #toast.ok{background:#166534}
+  #toast.err{background:var(--danger)}
+  .stickybar{position:fixed;inset-inline:0;bottom:0;z-index:90;background:rgba(255,255,255,.96);
+       border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+       display:flex;justify-content:center}
+  .stickybar .btn-primary{width:100%;max-width:520px}
+  .pactions{position:fixed;inset:0;z-index:110;background:rgba(15,23,42,.5);display:flex;
+       align-items:flex-end;justify-content:center}
+  .pabox{background:#fff;border-radius:16px 16px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+       width:100%;max-width:520px;max-height:80vh;overflow-y:auto}
+  .pabox h3{margin:0 0 4px;font-size:16px}
+  .pa-btn{display:block;width:100%;text-align:start;border:1px solid var(--line);background:#fff;border-radius:10px;
+       padding:12px 14px;margin-bottom:8px;font:inherit;font-size:14px;cursor:pointer;min-height:44px}
+  .pa-btn:hover{border-color:var(--brand)}
+  .pa-btn.danger{color:var(--danger);border-color:#fecaca}
+
+  /* ── الأوضاع الثلاثة + الإحصائيات ─────────────────────────────────── */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .stats div{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 12px;display:flex;flex-direction:column}
+  .stats b{font-size:19px;font-weight:700;line-height:1.2}
+  .stats span{font-size:11.5px;color:var(--muted)}
+  .modes{display:flex;gap:6px;margin-bottom:16px;background:#eef2f7;padding:4px;border-radius:12px}
+  .mode{flex:1;border:0;background:transparent;border-radius:9px;padding:10px 8px;font:inherit;font-size:13.5px;
+       font-weight:600;color:var(--muted);cursor:pointer;min-height:44px;white-space:nowrap}
+  .mode.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.12)}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .sku{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:700;
+       background:#eef2ff;color:#3730a3;border-radius:6px;padding:0 6px;direction:ltr;unicode-bidi:isolate}
+
+  /* فلاتر الموديلات */
+  .fbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .fbar select{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:inherit;font-size:13px;
+       background:#fff;color:var(--ink);min-width:0;flex:1 1 140px;max-width:220px}
+
+  /* المسح بالكاميرا */
+  .cam-btn{width:100%;margin-bottom:12px}
+  .cam{position:relative;border-radius:14px;overflow:hidden;background:#000;margin-top:4px}
+  .cam video{width:100%;display:block;max-height:60vh;object-fit:cover}
+  .cam-frame{position:absolute;inset:30% 12%;border:3px solid rgba(255,255,255,.85);border-radius:12px;pointer-events:none}
+  .cam .btn-ghost{position:absolute;bottom:10px;left:50%;transform:translateX(-50%)}
+
+  /* اختيار الموديل */
+  .picker{position:relative}
+  .picker input{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:inherit;font-size:13px}
+  .picker-list{position:absolute;z-index:20;inset-inline:0;top:100%;background:#fff;border:1px solid var(--line);
+       border-radius:10px;box-shadow:0 12px 30px -12px rgba(15,23,42,.3);max-height:260px;overflow-y:auto;margin-top:4px}
+  .picker-row{display:flex;gap:8px;align-items:center;width:100%;border:0;background:#fff;padding:9px 11px;
+       font:inherit;font-size:13px;text-align:start;cursor:pointer;border-bottom:1px solid #f1f5f9}
+  .picker-row:hover{background:#f5f7ff}
+  .picker-row .pname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .picker-row .pcat{color:var(--muted);font-size:11.5px}
+
+  /* جدول الرفع الجماعي */
+  .brows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .brow{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:11px;padding:8px;background:#fff;position:relative}
+  .brow.miss{border-color:#fed7aa;background:#fffbf5}
+  .brow.err{border-color:#fecaca;background:#fff5f5}
+  .brow img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:0 0 auto;background:var(--bg)}
+  .binfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding-inline-end:26px}
+  .binfo select{border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit;font-size:13px;background:#fff}
+  .fname{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+  .bprod{font-size:13px;font-weight:600}
+  .link{border:0;background:none;color:var(--brand);font:inherit;font-size:12px;cursor:pointer;padding:0 6px}
+  .bad-inline{color:var(--danger);font-size:12px}
+  .x-inline{position:absolute;top:6px;inset-inline-end:6px;width:24px;height:24px;border-radius:99px;border:0;
+       background:#f1f5f9;color:var(--muted);cursor:pointer;font-size:12px}
+  @media (max-width:520px){ .stats{grid-template-columns:repeat(2,1fr)} .fbar select{max-width:none} }
+
+  /* أهداف اللمس على الموبايل: التصميم اتعمل للماوس على شاشة كبيرة،
+     ودلوقتي بقى تطبيق على الموبايل. توصية آبل ٤٤ بكسل للإصبع، وكان
+     فيه أزرار ٢٧ بكسل. الكثافة على الديسك توب بتفضل زي ما هي — الميديا
+     كويري دي للشاشات الصغيرة بس. */
+  @media (max-width: 700px){
+    button, .btn, .btn-sm, .btn-ghost, .btn-primary, .tab, .fchip, .chip-btn,
+    select, input[type="checkbox"], .opt, a.btn{ min-height:42px }
+    .btn-sm{ padding:9px 14px; font-size:13px }
+    .tab{ padding:10px 16px }
+    button, select, input, textarea{ font-size:16px }  /* أقل من ١٦ بيعمل زوم تلقائي على iOS */
+    .actions{ gap:10px }
+  }
+</style>
+<link rel="manifest" href="/omraa/manifest.json"/>
+<link rel="apple-touch-icon" href="/omraa/apple-touch-icon.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="الأمراء"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="author" content="Mohab Beshier — Axis Marketing Agency"/><meta name="copyright" content="© 2026 Mohab Beshier &amp; Axis Marketing Agency. All rights reserved. Licensed to Al-Omraa only."/></head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>صور المنتجات</h1>
+      <p class="sub">كل صورة مربوطة بالموديل (الاسم والـSKU) واللون — امسحي باركود، أو ارفعي جماعي، أو اختاري موديل</p>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><a class="back" href="website.html">مركز تحكّم الموقع ←</a><a class="back" href="products.html">→ رجوع للمنتجات</a></div>
+  </header>
+  <div id="app"><div class="center"><div class="spin-big"></div><p class="muted">جارٍ التحميل…</p></div></div>
+</div>
+<div id="toast"></div>
+<script src="vendor/react.min.js"></script>
+<script src="vendor/react-dom.min.js"></script>
+
+<!-- تسجيل الأخطاء: الصفحات دي كانت برّه التغطية تمامًا -->
+<script src="omraa-telemetry.js"></script><script src="omraa-net.js?v=1"></script>
+<script src="photos.build.js"></script>
+<script>
+/* نفس تسجيل الـservice worker اللي في صفحات النظام — من غيره الصفحات
+   دي بتفضل برّه الكاش الاحتياطي لو النت فصل جوّه المحل. */
+if("serviceWorker" in navigator){window.addEventListener("load",function(){
+  navigator.serviceWorker.register("/omraa/sw.js").catch(function(){});});}
+</script>
+</body>
+</html>
